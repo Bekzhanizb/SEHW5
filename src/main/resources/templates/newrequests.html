@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}"
+      xmlns:layout="http://www.w3.org/1999/xhtml">
+<head>
+    <title>New Requests</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <h2 class="mb-4">New Requests</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-primary">
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Course</th>
+                    <th>Operators</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="request : ${requests}">
+                    <td th:text="${request.id}"></td>
+                    <td th:text="${request.userName}"></td>
+                    <td th:text="${request.course.name}"></td>
+                    <td>
+                        <ul class="list-unstyled mb-0">
+                            <li th:each="operator : ${request.operators}"
+                                th:text="${operator.name + ' ' + operator.surname + ' (' + operator.department + ')'}"></li>
+                        </ul>
+                    </td>
+                    <td>
+                        <form th:action="@{/assign}" method="post" class="d-inline-block mb-2">
+                            <input type="hidden" name="requestId" th:value="${request.id}">
+                            <select name="operatorIds" class="form-select form-select-sm mb-2" multiple>
+                                <option th:each="operator : ${operators}" th:value="${operator.id}"
+                                        th:text="${operator.name + ' ' + operator.surname}"></option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary w-100">Assign</button>
+                        </form>
+
+                        <!-- Process Request -->
+                        <form th:action="@{/process}" method="post" class="d-inline-block mb-2 w-100">
+                            <input type="hidden" name="requestId" th:value="${request.id}">
+                            <button type="submit" class="btn btn-sm btn-success w-100">Mark as Processed</button>
+                        </form>
+
+                        <form th:each="operator : ${request.operators}" th:action="@{/removeOperator}" method="post"
+                              class="d-inline-block w-100">
+                            <input type="hidden" name="requestId" th:value="${request.id}">
+                            <input type="hidden" name="operatorId" th:value="${operator.id}">
+                            <button type="submit" class="btn btn-sm btn-danger w-100 mt-1"
+                                    th:text="'Remove ' + ${operator.name}"></button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
