@@ -51,10 +51,11 @@ public class RequestService {
 
     public Request createRequest(Request request) {
         request.setHandled(false);
-        return requestRepository.save(request);
+        requestRepository.save(request);
+        return request;
     }
 
-    public Request assignOperators(Long requestId, List<Long> operatorIds) {
+    public void assignOperators(Long requestId, List<Long> operatorIds) {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
         if (request.isHandled()) {
@@ -62,17 +63,17 @@ public class RequestService {
         }
         Set<Operators> operators = new HashSet<>(operatorRepository.findAllById(operatorIds));
         request.getOperators().addAll(operators);
-        return requestRepository.save(request);
+        requestRepository.save(request);
     }
 
-    public Request processRequest(Long requestId) {
+    public void processRequest(Long requestId) {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
         request.setHandled(true);
-        return requestRepository.save(request);
+        requestRepository.save(request);
     }
 
-    public Request removeOperator(Long requestId, Long operatorId) {
+    public void removeOperator(Long requestId, Long operatorId) {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found"));
         if (request.isHandled()) {
@@ -81,6 +82,41 @@ public class RequestService {
         Operators operator = operatorRepository.findById(operatorId)
                 .orElseThrow(() -> new RuntimeException("Operator not found"));
         request.getOperators().remove(operator);
+        requestRepository.save(request);
+    }
+    public Request getRequestById(Long id) {
+        return requestRepository.findById(id).orElse(null);
+    }
+
+    public Request updateRequest(Request request) {
         return requestRepository.save(request);
+    }
+
+    public void deleteRequest(Long id) {
+        requestRepository.deleteById(id);
+    }
+
+    public Courses createCourse(Courses course) {
+        return courseRepository.save(course);
+    }
+
+    public Courses updateCourse(Courses course) {
+        return courseRepository.save(course);
+    }
+
+    public void deleteCourse(Long id) {
+        courseRepository.deleteById(id);
+    }
+
+    public Operators createOperator(Operators operator) {
+        return operatorRepository.save(operator);
+    }
+
+    public Operators updateOperator(Operators operator) {
+        return operatorRepository.save(operator);
+    }
+
+    public void deleteOperator(Long id) {
+        operatorRepository.deleteById(id);
     }
 }

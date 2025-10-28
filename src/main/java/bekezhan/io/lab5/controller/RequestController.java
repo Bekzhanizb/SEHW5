@@ -4,71 +4,110 @@ import bekezhan.io.lab5.entity.Courses;
 import bekezhan.io.lab5.entity.Request;
 import bekezhan.io.lab5.service.RequestService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
-@Controller
+@RestController
+@RequestMapping("/api/requests")
 public class RequestController {
 
     @Autowired
     private RequestService requestService;
 
-    @GetMapping("/")
-    public String getAllRequests(Model model) {
-        model.addAttribute("requests", requestService.getAllRequests());
-        model.addAttribute("operators", requestService.getAllOperators());
-        return "index";
+    @GetMapping
+    public ResponseEntity<List<Request>> getAllRequests() {
+        return ResponseEntity.ok(requestService.getAllRequests());
     }
 
-    @GetMapping("/newrequests")
-    public String getNewRequests(Model model) {
-        model.addAttribute("requests", requestService.getNewRequests());
-        model.addAttribute("operators", requestService.getAllOperators());
-        return "newrequests";
+    @GetMapping("/{id}")
+    public ResponseEntity<Request> getRequestById(@PathVariable Long id) {
+        Request request = requestService.getRequestById(id);
+        if (request == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(request);
     }
 
-    @GetMapping("/processed")
-    public String getProcessedRequests(Model model) {
-        model.addAttribute("requests", requestService.getProcessedRequests());
-        return "processed";
-    }
+    @PostMapping
+    public ResponseEntity<Request> createRequest(@RequestBody Map<String, Object> payload) {
+        Request request = new Request();
+        request.setUserName((String) payload.get("userName"));
+        request.setCommentary((String) payload.get("commentary"));
+        request.setPhone((String) payload.get("phone"));
+        request.setHandled((Boolean) payload.getOrDefault("handled", false));
 
-    @GetMapping("/add")
-    public String addRequestForm(Model model) {
-        model.addAttribute("courses", requestService.getAllCourses());
-        model.addAttribute("request", new Request());
-        return "add";
-    }
-
-    @PostMapping("/add")
-    public String createRequest(@ModelAttribute Request request, @RequestParam Long courseId) {
+        Long courseId = Long.valueOf(payload.get("courseId").toString());
         Courses course = requestService.getAllCourses().stream()
                 .filter(c -> c.getId().equals(courseId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Course not found"));
+
         request.setCourse(course);
-        requestService.createRequest(request);
-        return "redirect:/";
+        Request createdRequest = requestService.createRequest(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdRequest);
     }
 
-    @PostMapping("/assign")
-    public String assignOperators(@RequestParam Long requestId, @RequestParam List<Long> operatorIds) {
-        requestService.assignOperators(requestId, operatorIds);
-        return "redirect:/";
+    @PutMapping("/{id}")
+    public ResponseEntity<Request> updateRequest(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+        Request existingRequest = requestService.getRequestById(id);
+        if (existingRequest == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (payload.containsKey("userName")) {
+            existingRequest.setUserName((String) payload.get("userName"));
+        }
+        if (payload.containsKey("commentary")) {
+            existingRequest.setCommentary((String) payload.get("commentary"));
+        }
+        if (payload.containsKey("phone")) {
+            existingRequest.setPhone((String) payload.get("phone"));
+        }
+        if (payload.containsKey("handled")) {
+            existingRequest.setHandled((Boolean) payload.get("handled"));
+        }
+        if (payload.containsKey("courseId")) {
+            Long courseId = Long.valueOf(payload.get("courseId").toString());
+            Courses course = requestService.getAllCourses().stream()
+                    .filter(c -> c.getId().equals(courseId))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Course not found"));
+            existingRequest.setCourse(course);
+        }
+
+        Request updatedRequest = requestService.updateRequest(existingRequest);
+        return ResponseEntity.ok(updatedRequest);
     }
 
-    @PostMapping("/process")
-    public String processRequest(@RequestParam Long requestId) {
-        requestService.processRequest(requestId);
-        return "redirect:/";
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteRequest(@PathVariable Long id) {
+        Request request = requestService.getRequestById(id);
+        if (request == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        requestService.deleteRequest(id);
+        return ResponseEntity.ok(Map.of("message", "Request deleted successfully"));
     }
 
-    @PostMapping("/removeOperator")
-    public String removeOperator(@RequestParam Long requestId, @RequestParam Long operatorId) {
-        requestService.removeOperator(requestId, operatorId);
-        return "redirect:/";
+    @GetMapping("/new")
+    public ResponseEntity<List<Request>> getNewRequests() {
+        return ResponseEntity.ok(requestService.getNewRequests());
+    }
+
+    @GetMapping("/processed")
+    public ResponseEntity<List<Request>> getProcessedRequests() {
+        return ResponseEntity.ok(requestService.getProcessedRequests());
+    }
+
+    @PutMapping("/{id}/process")
+    public ResponseEntity<Request> processRequest(@PathVariable Long id) {
+        requestService.processRequest(id);
+        Request processedRequest = requestService.getRequestById(id);
+        return ResponseEntity.ok(processedRequest);
     }
 }
