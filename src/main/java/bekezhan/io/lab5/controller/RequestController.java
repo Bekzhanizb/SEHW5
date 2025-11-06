@@ -32,46 +32,47 @@ public class RequestController {
         return ResponseEntity.ok(request);
     }
 
-    @PostMapping
-    public ResponseEntity<Request> createRequest(@RequestBody Map<String, Object> payload) {
+    @PostMapping("/add")
+    public ResponseEntity<Request> createRequest( @RequestParam String userName,
+            @RequestParam String commentary,
+            @RequestParam String phone,
+            @RequestParam Long courseId
+    ) {
         Request request = new Request();
-        request.setUserName((String) payload.get("userName"));
-        request.setCommentary((String) payload.get("commentary"));
-        request.setPhone((String) payload.get("phone"));
-        request.setHandled((Boolean) payload.getOrDefault("handled", false));
+        request.setUserName(userName);
+        request.setCommentary(commentary);
+        request.setPhone(phone);
+        request.setHandled(false);
 
-        Long courseId = Long.valueOf(payload.get("courseId").toString());
         Courses course = requestService.getAllCourses().stream()
                 .filter(c -> c.getId().equals(courseId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
         request.setCourse(course);
+
         Request createdRequest = requestService.createRequest(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRequest);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Request> updateRequest(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+    @PutMapping("/update")
+    public ResponseEntity<Request> updateRequest( @RequestParam Long id,
+            @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String commentary,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) Boolean handled,
+            @RequestParam(required = false) Long courseId
+    ) {
         Request existingRequest = requestService.getRequestById(id);
         if (existingRequest == null) {
             return ResponseEntity.notFound().build();
         }
 
-        if (payload.containsKey("userName")) {
-            existingRequest.setUserName((String) payload.get("userName"));
-        }
-        if (payload.containsKey("commentary")) {
-            existingRequest.setCommentary((String) payload.get("commentary"));
-        }
-        if (payload.containsKey("phone")) {
-            existingRequest.setPhone((String) payload.get("phone"));
-        }
-        if (payload.containsKey("handled")) {
-            existingRequest.setHandled((Boolean) payload.get("handled"));
-        }
-        if (payload.containsKey("courseId")) {
-            Long courseId = Long.valueOf(payload.get("courseId").toString());
+        if (userName != null) existingRequest.setUserName(userName);
+        if (commentary != null) existingRequest.setCommentary(commentary);
+        if (phone != null) existingRequest.setPhone(phone);
+        if (handled != null) existingRequest.setHandled(handled);
+        if (courseId != null) {
             Courses course = requestService.getAllCourses().stream()
                     .filter(c -> c.getId().equals(courseId))
                     .findFirst()
@@ -82,6 +83,7 @@ public class RequestController {
         Request updatedRequest = requestService.updateRequest(existingRequest);
         return ResponseEntity.ok(updatedRequest);
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteRequest(@PathVariable Long id) {
