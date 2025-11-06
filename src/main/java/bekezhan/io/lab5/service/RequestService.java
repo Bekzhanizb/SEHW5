@@ -95,28 +95,4 @@ public class RequestService {
     public void deleteRequest(Long id) {
         requestRepository.deleteById(id);
     }
-
-    public Courses createCourse(Courses course) {
-        return courseRepository.save(course);
-    }
-
-    public Courses updateCourse(Courses course) {
-        return courseRepository.save(course);
-    }
-
-    public void deleteCourse(Long id) {
-        courseRepository.deleteById(id);
-    }
-
-    public Operators createOperator(Operators operator) {
-        return operatorRepository.save(operator);
-    }
-
-    public Operators updateOperator(Operators operator) {
-        return operatorRepository.save(operator);
-    }
-
-    public void deleteOperator(Long id) {
-        operatorRepository.deleteById(id);
-    }
 }
